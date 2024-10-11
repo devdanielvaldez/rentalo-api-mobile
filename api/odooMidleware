@@ -1,0 +1,24 @@
+const { getSdk } = require('../api-util/sdk');
+const { authenticateCustomer } = require('./createOdooUser');
+
+// This middleware checks if user is authenticated in flex,
+// fetches PayPal auth token and injects into request
+// so it can be used in subsequent requests to PayPal rest api.
+module.exports = function(req, res, next) {
+
+    const sdk = getSdk(req, res);
+
+  sdk.currentUser
+    .show()
+    .then(response => {
+      req.currentUser = response.data.data;
+      return authenticateCustomer();
+    })
+    .then(authenticateResponse => {
+        req.authToken = authenticateResponse;
+      next();
+    })
+    .catch(error => {
+      console.error(error,"error")    
+});
+}
